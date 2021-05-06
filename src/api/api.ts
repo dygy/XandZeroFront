@@ -5,8 +5,7 @@ declare type matrixReq = {
     winner: number
 }
 const rpc = async (headers: Headers, isStr = false) : Promise<matrixReq | string> => {
-    console.log(headers.get('request'), isStr)
-    let data: matrixReq|string = {winner: 0, matrix: new Array([3][3])}
+    let data: matrixReq|string = '';
     await fetch(host,{headers})
         .then(res=>{
             //return res.text()
@@ -14,12 +13,11 @@ const rpc = async (headers: Headers, isStr = false) : Promise<matrixReq | string
             return res.json()
         })
         .then(res => {
-            console.log(res)
             if (isStr) return data = res
             return data = JSON.parse(res)
         })
         .catch(e=>{
-            console.log(e)
+            console.warn(e)
         })
     return data;
 }
@@ -41,11 +39,23 @@ const GETTable = async () : Promise<matrixReq> => {
 
     return await rpc(headers, false) as matrixReq
 }
-const refresh = async (): Promise<matrixReq> => {
+
+const checkUUID = async (uuid: string) : Promise<boolean> => {
+    const headers = new Headers();
+    headers.append("request", "checkUUID");
+    headers.append("id", uuid);
+    const data = await rpc(headers, true)
+
+    return data === 'true'
+}
+
+const refresh = async (setUUID: (uuid: string|null)=>void): Promise<matrixReq> => {
     const headers = new Headers();
     headers.append("request", "refresh");
     headers.append("id", localStorage.getItem('id') || '');
-    localStorage.clear()
+    localStorage.removeItem('id')
+    setUUID(null)
+
     return await rpc(headers, true) as matrixReq
 }
 const giveSlot = async (): Promise<string> => {
@@ -60,4 +70,5 @@ export default {
     placeUnit,
     refresh,
     giveSlot,
+    checkUUID
 }

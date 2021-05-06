@@ -1,0 +1,16 @@
+.App-Popup {
+    position: absolute;
+    right: calc(50% - 200px);
+    top: 50%;
+    cursor: progress;
+    z-index: 1;
+    height: 200px;
+    width: 300px;
+    color: black;
+    background-color: snow;
+    font-family: fantasy;
+    border: 3px sienna solid;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

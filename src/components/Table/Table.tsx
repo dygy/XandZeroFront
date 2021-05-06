@@ -2,13 +2,24 @@ import './Table.css'
 import {useEffect, useState} from "react";
 import api from "../../api/api";
 import Figure from "../Figure/Figure";
-const map = (array: number[][]| number[], setUnit: (row: number, col: number)=>void, col?: number): JSX.Element[] | undefined => {
-    // @ts-ignore
-    return array?.map((e, key)=>{
-        return typeof e !== "number" && typeof col !== "number"
-            ? <div key={key} children={map(e, setUnit, key)}/>
+import WinnerPopup from "../WinnerPopup/WinnerPopup";
+
+const map = (
+    array: number[][],
+    setUnit: (row: number, col: number)=>void,
+    setIsPopUp: (isPopup: boolean)=>void,
+    isPopUp: boolean ): JSX.Element[] | undefined => {
+    const isEmpty: boolean = array.filter(e=>e.some(e=>0)).length < 1;
+    if (isEmpty !== isPopUp) {
+        setIsPopUp(isEmpty)
+    }
+    //setIsPopUp(array.filter(e=>e.some(e=>0)).length < 1)
+
+    return array?.map((e, col)=>{
+        return  <div key={col} children={e.map((e, row)=>(
+                <Figure col={col} row={row} key={col+row} player={e} setUnit={setUnit}/>
+            ))}/>
             // eslint-disable-next-line no-mixed-operators
-            : <Figure col={col && col || 0} row={key} key={key} player={e} setUnit={setUnit}/>
     })
 }
 
@@ -19,8 +30,9 @@ declare type props = {
 
 
 export default ({uuid}: props) => {
-    const [matrix, setMatrix]: any = useState(undefined)
+    const [matrix, setMatrix] = useState([[0]])
     const [winner, setWinner] = useState(0)
+    const [isPopup, setIsPopup] = useState(false)
 
     const setUnit = (col: number, row: number) => {
         api.placeUnit(uuid,`${row}${col}`).then((response)=>{
@@ -34,14 +46,19 @@ export default ({uuid}: props) => {
             api.GETTable().then((response)=>{
                 setMatrix(response.matrix)
                 setWinner(response.winner)
-                console.log(response.matrix.length)
             })
-        }, 2000)
+        }, 5000)
     },[])
-    console.log(matrix)
+
     return (<div className={'App-table'}>
             <div>
-                {map(matrix, setUnit)}
+                { matrix.length === 3 && (
+                    <>
+                        {(winner|| isPopup) && <WinnerPopup winner={winner}/>}
+                        {map(matrix||[], setUnit, setIsPopup, isPopup)}
+                    </>
+                )
+                }
             </div>
     </div>)
 
